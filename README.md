@@ -147,3 +147,4 @@ Este proyecto está licenciado bajo la Licencia MIT. Consulta el archivo LICENSE
 
 3. **Secciones Adicionales**:
    - Se han añadido secciones para la configuración de Vuetify, el router, la gestión del estado y los estilos.
+# pnt2-trabajointegrador
