@@ -57,7 +57,7 @@
 
 <script setup>
 import { ref, onMounted, watch, computed } from 'vue';
-import axios from 'axios';
+import apiClient from '@/plugins/axios';
 import { useAuthStore } from '@/store/auth';
 import OrderCard from '@/components/OrderCard.vue';
 
@@ -70,7 +70,7 @@ const productNames = ref({});
 
 const fetchOrders = async () => {
   try {
-    const response = await axios.get(`http://localhost:8001/app/orders/user/${userId.value}`);
+    const response = await apiClient.get(`/orders/user/${userId.value}`);
     orders.value = response.data.orders;
   } catch (error) {
     console.error('Error al obtener las órdenes:', error);
@@ -89,7 +89,7 @@ const parsedProducts = computed(() => JSON.parse(selectedOrder.value.products));
 const fetchProductName = async (productId) => {
   if (!productNames.value[productId]) {
     try {
-      const response = await axios.get(`http://localhost:8001/app/products/${productId}`);
+      const response = await apiClient.get(`/products/${productId}`);
       productNames.value[productId] = response.data.message.name;
     } catch (error) {
       console.error(`Error al obtener el nombre del producto con ID ${productId}:`, error);

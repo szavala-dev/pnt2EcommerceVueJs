@@ -24,7 +24,7 @@
   
   <script setup>
   import { ref, computed, onMounted } from 'vue';
-  import axios from 'axios';
+  import apiClient from '@/plugins/axios';
   
   const props = defineProps({
     order: {
@@ -39,7 +39,7 @@
   const fetchProductName = async (productId) => {
     if (!productNames.value[productId]) {
       try {
-        const response = await axios.get(`http://localhost:8001/app/products/${productId}`);
+        const response = await apiClient.get(`/products/${productId}`);
         productNames.value[productId] = response.data.message.name;
       } catch (error) {
         console.error(`Error al obtener el nombre del producto con ID ${productId}:`, error);

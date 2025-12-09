@@ -42,7 +42,7 @@
   
   <script setup>
   import { ref, onMounted } from 'vue';
-  import axios from 'axios';
+  import apiClient from '@/plugins/axios';
   
   const roles = ref([]);
   const dialog = ref(false);
@@ -58,7 +58,7 @@
   
   const fetchRoles = async () => {
     try {
-      const response = await axios.get('http://localhost:8001/app/roles');
+      const response = await apiClient.get('/roles');
       roles.value = response.data.message;
     } catch (error) {
       console.error('Error al obtener los roles:', error);
@@ -85,13 +85,13 @@
   const saveRole = async () => {
     try {
       if (isEditing.value) {
-        await axios.put(`http://localhost:8001/app/roles/${editedRole.value.id}`, editedRole.value);
+        await apiClient.put(`/roles/${editedRole.value.id}`, editedRole.value);
         const index = roles.value.findIndex(role => role.id === editedRole.value.id);
         if (index !== -1) {
           roles.value[index] = { ...editedRole.value };
         }
       } else {
-        const response = await axios.post('http://localhost:8001/app/roles', editedRole.value);
+        const response = await apiClient.post('/roles', editedRole.value);
         roles.value.push(response.data.message);
       }
       closeDialog();
@@ -105,7 +105,7 @@
   const deleteRoleHandler = async (roleId) => {
     if (confirm('¿Estás seguro de eliminar este rol?')) {
       try {
-        await axios.delete(`http://localhost:8001/app/roles/${roleId}`);
+        await apiClient.delete(`/roles/${roleId}`);
         roles.value = roles.value.filter(role => role.id !== roleId);
         alert('Rol eliminado con éxito.');
       } catch (error) {

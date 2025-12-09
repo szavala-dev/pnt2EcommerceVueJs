@@ -1,39 +1,94 @@
 <template>
   <div>
-    <h3>Gestión de Roles</h3>
-    <v-btn color="primary" @click="openAddRoleDialog">Agregar Rol</v-btn>
+    <div class="d-flex justify-space-between align-center mb-4">
+      <div>
+        <h3>Gestión de Usuarios</h3>
+        <p class="subtitle">Administra los clientes, sus datos y roles asignados.</p>
+      </div>
+      <v-btn color="primary" @click="openAddUserDialog">Crear Usuario</v-btn>
+    </div>
+
     <v-data-table
       :headers="headers"
-      :items="roles"
+      :items="users"
       class="elevation-1"
+      :loading="loading"
+      loading-text="Cargando usuarios..."
     >
+      <template #item.role="{ item }">
+        {{ resolveRoleName(item.RoleId) }}
+      </template>
       <template #item.createdAt="{ item }">
-        {{ new Date(item.createdAt).toLocaleString() }}
+        {{ formatDate(item.createdAt) }}
       </template>
       <template #item.updatedAt="{ item }">
-        {{ new Date(item.updatedAt).toLocaleString() }}
+        {{ formatDate(item.updatedAt) }}
       </template>
       <template #item.actions="{ item }">
-        <v-btn small color="blue" @click="openEditRoleDialog(item)">Editar</v-btn>
-        <v-btn small color="red" text @click="deleteRoleHandler(item.id)">Eliminar</v-btn>
+        <v-btn icon="mdi-eye" variant="text" @click="openViewDialog(item)"></v-btn>
+        <v-btn icon="mdi-pencil" variant="text" color="primary" @click="openEditUserDialog(item)"></v-btn>
+        <v-btn icon="mdi-delete" variant="text" color="red" @click="deleteUserHandler(item.id)"></v-btn>
       </template>
     </v-data-table>
 
-    <v-dialog v-model="dialog" max-width="500px">
+    <!-- Dialogo Crear/Editar -->
+    <v-dialog v-model="editDialog" max-width="640px">
       <v-card>
         <v-card-title>
-          <span class="headline">{{ isEditing ? 'Editar Rol' : 'Agregar Rol' }}</span>
+          <span class="headline">{{ isEditing ? 'Editar Usuario' : 'Crear Usuario' }}</span>
         </v-card-title>
         <v-card-text>
-          <v-form ref="form">
-            <v-text-field v-model="editedRole.id" label="ID del Rol" :disabled="isEditing" required></v-text-field>
-            <v-text-field v-model="editedRole.name" label="Nombre del Rol" required></v-text-field>
+          <v-form ref="formRef" @submit.prevent="saveUser">
+            <v-row dense>
+              <v-col cols="12" md="6"><v-text-field v-model="editableUser.name" label="Nombre" required /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model="editableUser.lastname" label="Apellido" required /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model="editableUser.mail" type="email" label="Correo" required /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model="editableUser.dni" label="DNI" required /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model="editableUser.dateOfBirth" type="date" label="Fecha de nacimiento" /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model="editableUser.address" label="Dirección" /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model="editableUser.city" label="Ciudad" /></v-col>
+              <v-col cols="12" md="6"><v-text-field v-model="editableUser.state" label="Provincia" /></v-col>
+              <v-col cols="12" md="6">
+                <v-select
+                  :items="roleOptions"
+                  item-title="name"
+                  item-value="id"
+                  v-model="editableUser.RoleId"
+                  label="Rol"
+                  required
+                />
+              </v-col>
+              <v-col cols="12" md="6" v-if="!isEditing">
+                <v-text-field v-model="editableUser.pass" type="password" label="Contraseña temporal" required />
+              </v-col>
+            </v-row>
           </v-form>
         </v-card-text>
         <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey darken-1" text class="boton"  @click="closeDialog">Cancelar</v-btn>
-          <v-btn color="green darken-1" text class="boton" @click="saveRole">{{ isEditing ? 'Guardar' : 'Agregar' }}</v-btn>
+          <v-spacer />
+          <v-btn text @click="closeEditDialog">Cancelar</v-btn>
+          <v-btn color="primary" @click="saveUser">{{ isEditing ? 'Guardar' : 'Crear' }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Dialogo detalle -->
+    <v-dialog v-model="viewDialog" max-width="520px">
+      <v-card>
+        <v-card-title>Detalle de Usuario</v-card-title>
+        <v-card-text v-if="selectedUser">
+          <p><strong>Nombre:</strong> {{ selectedUser.name }} {{ selectedUser.lastname }}</p>
+          <p><strong>Email:</strong> {{ selectedUser.mail }}</p>
+          <p><strong>DNI:</strong> {{ selectedUser.dni }}</p>
+          <p><strong>Rol:</strong> {{ resolveRoleName(selectedUser.RoleId) }}</p>
+          <p><strong>Dirección:</strong> {{ selectedUser.address }}, {{ selectedUser.city }}, {{ selectedUser.state }}</p>
+          <p><strong>Fecha de nacimiento:</strong> {{ formatDate(selectedUser.dateOfBirth) }}</p>
+          <p><strong>Creado:</strong> {{ formatDate(selectedUser.createdAt) }}</p>
+          <p><strong>Actualizado:</strong> {{ formatDate(selectedUser.updatedAt) }}</p>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn text @click="viewDialog = false">Cerrar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -42,87 +97,155 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
+import apiClient from '@/plugins/axios';
 
+const users = ref([]);
 const roles = ref([]);
-const dialog = ref(false);
+const loading = ref(false);
+const editDialog = ref(false);
+const viewDialog = ref(false);
 const isEditing = ref(false);
-const editedRole = ref({ id: '', name: '' });
+const selectedUser = ref(null);
+const formRef = ref(null);
+
+const emptyUser = () => ({
+  id: null,
+  name: '',
+  lastname: '',
+  mail: '',
+  dni: '',
+  pass: '',
+  dateOfBirth: '',
+  address: '',
+  city: '',
+  state: '',
+  RoleId: null,
+});
+
+const editableUser = ref(emptyUser());
+
 const headers = [
   { text: 'ID', value: 'id' },
   { text: 'Nombre', value: 'name' },
+  { text: 'Apellido', value: 'lastname' },
+  { text: 'Email', value: 'mail' },
+  { text: 'Rol', value: 'role' },
   { text: 'Creado', value: 'createdAt' },
   { text: 'Actualizado', value: 'updatedAt' },
   { text: 'Acciones', value: 'actions', sortable: false },
 ];
 
+const roleOptions = ref([]);
+
+const normalizeArray = (payload) => {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.users)) return payload.users;
+  if (Array.isArray(payload.message)) return payload.message;
+  return [];
+};
+
+const fetchUsers = async () => {
+  loading.value = true;
+  try {
+    const response = await apiClient.get('/users');
+    users.value = normalizeArray(response.data);
+  } catch (error) {
+    console.error('Error al obtener los usuarios:', error);
+    alert('No se pudieron cargar los usuarios.');
+  } finally {
+    loading.value = false;
+  }
+};
+
 const fetchRoles = async () => {
   try {
-    const response = await axios.get('http://localhost:8001/app/roles');
-    roles.value = response.data.message;
+    const response = await apiClient.get('/roles');
+    roles.value = normalizeArray(response.data);
+    roleOptions.value = roles.value;
   } catch (error) {
     console.error('Error al obtener los roles:', error);
-    alert('Error al obtener los roles.');
   }
 };
 
-const openAddRoleDialog = () => {
+const openAddUserDialog = () => {
   isEditing.value = false;
-  editedRole.value = { id: '', name: '' };
-  dialog.value = true;
+  editableUser.value = emptyUser();
+  editDialog.value = true;
 };
 
-const openEditRoleDialog = (role) => {
+const openEditUserDialog = (user) => {
   isEditing.value = true;
-  editedRole.value = { ...role };
-  dialog.value = true;
+  editableUser.value = {
+    ...user,
+    dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : '',
+  };
+  editDialog.value = true;
 };
 
-const closeDialog = () => {
-  dialog.value = false;
+const openViewDialog = (user) => {
+  selectedUser.value = user;
+  viewDialog.value = true;
 };
 
-const saveRole = async () => {
+const closeEditDialog = () => {
+  editDialog.value = false;
+  editableUser.value = emptyUser();
+};
+
+const saveUser = async () => {
   try {
+    const payload = { ...editableUser.value };
     if (isEditing.value) {
-      await axios.put(`http://localhost:8001/app/roles/${editedRole.value.id}`, editedRole.value);
-      const index = roles.value.findIndex(role => role.id === editedRole.value.id);
-      if (index !== -1) {
-        roles.value[index] = { ...editedRole.value };
-      }
+      delete payload.pass;
+      await apiClient.put(`/users/${payload.id}`, payload);
+      alert('Usuario actualizado con éxito.');
     } else {
-      const response = await axios.post('http://localhost:8001/app/roles', editedRole.value);
-      roles.value.push(response.data.message);
+      if (!payload.pass) {
+        alert('Define una contraseña temporal.');
+        return;
+      }
+      await apiClient.post('/users', payload);
+      alert('Usuario creado con éxito.');
     }
-    closeDialog();
-    alert(isEditing.value ? 'Rol actualizado con éxito.' : 'Rol agregado con éxito.');
+    closeEditDialog();
+    await fetchUsers();
   } catch (error) {
-    console.error('Error al guardar el rol:', error);
-    alert('Error al guardar el rol.');
+    console.error('Error al guardar el usuario:', error);
+    alert('No se pudo guardar el usuario.');
   }
 };
 
-const deleteRoleHandler = async (roleId) => {
-  if (confirm('¿Estás seguro de eliminar este rol?')) {
-    try {
-      await axios.delete(`http://localhost:8001/app/roles/${roleId}`);
-      roles.value = roles.value.filter(role => role.id !== roleId);
-      alert('Rol eliminado con éxito.');
-    } catch (error) {
-      console.error('Error al eliminar el rol:', error);
-      alert('Error al eliminar el rol.');
-    }
+const deleteUserHandler = async (userId) => {
+  if (!confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')) return;
+  try {
+    await apiClient.delete(`/users/${userId}`);
+    users.value = users.value.filter((user) => user.id !== userId);
+    alert('Usuario eliminado.');
+  } catch (error) {
+    console.error('Error al eliminar el usuario:', error);
+    alert('No se pudo eliminar el usuario.');
   }
 };
 
-onMounted(fetchRoles);
+const formatDate = (value) => {
+  if (!value) return '-';
+  return new Date(value).toLocaleString();
+};
+
+const resolveRoleName = (roleId) => {
+  const role = roles.value.find((roleItem) => roleItem.id === roleId);
+  return role ? role.name : 'Sin rol';
+};
+
+onMounted(async () => {
+  await Promise.all([fetchUsers(), fetchRoles()]);
+});
 </script>
 
 <style scoped>
-.boton {
-  color: white !important; 
-  font-weight: bold; 
+.subtitle {
+  color: #666;
+  margin-top: 4px;
 }
-
-
 </style>

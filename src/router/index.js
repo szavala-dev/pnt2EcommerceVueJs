@@ -15,13 +15,13 @@ import AboutView from '../views/AboutView.vue';
 const routes = [
   { path: '/', name: 'Home', component: HomeView },
   { path: '/catalog', name: 'Catalog', component: CatalogView },
-  { path: '/profile', name: 'Profile', component: ProfileView },
+  { path: '/profile', name: 'Profile', component: ProfileView, meta: { requiresAuth: true } },
   { path: '/product/:id', name: 'ProductDetails', component: ProductDetailsView, props: true },
-  { path: '/cart', name: 'Cart', component: CartView },
+  { path: '/cart', name: 'Cart', component: CartView, meta: { requiresAuth: true } },
   { path: '/login', name: 'Login', component: LoginView },
   { path: '/register', name: 'Register', component: RegisterView },
-  { path: '/orders', name: 'Orders', component: OrderDetailsView },
-  { path: '/admin', name: 'AdminDashboard', component: AdminDashboardView, meta: { requiresAuth: true } },
+  { path: '/orders', name: 'Orders', component: OrderDetailsView, meta: { requiresAuth: true } },
+  { path: '/admin', name: 'AdminDashboard', component: AdminDashboardView, meta: { requiresAuth: true, requiresAdmin: true } },
   { path: '/about', name: 'AboutView', component: AboutView },
 
 ];
@@ -31,13 +31,34 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore();
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-    next({ name: 'Login' });
-  } else {
-    next();
+  const requiresAuth = Boolean(to.meta?.requiresAuth);
+  const requiresAdmin = Boolean(to.meta?.requiresAdmin);
+  const storedToken = localStorage.getItem('authToken');
+
+  if (storedToken && !authStore.token) {
+    authStore.token = storedToken;
   }
+
+  if (storedToken && !authStore.user) {
+    try {
+      await authStore.fetchUser();
+    } catch (error) {
+      console.error('Error al recuperar la sesión desde el guard:', error);
+      authStore.logout();
+    }
+  }
+
+  if (requiresAuth && !authStore.isAuthenticated) {
+    return next({ name: 'Login', query: { redirect: to.fullPath } });
+  }
+
+  if (requiresAdmin && !authStore.isAdminGetter) {
+    return next({ name: 'Home' });
+  }
+
+  return next();
 });
 
 export default router;

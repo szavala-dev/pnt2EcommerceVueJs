@@ -27,6 +27,22 @@
               <v-list-item-title>Ver Usuarios</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
+          <v-list-item @click="currentView = 'OrdersManagement'">
+            <v-list-item-icon>
+              <v-icon>mdi-cart</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Órdenes</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-list-item @click="currentView = 'ImageUrlsManagement'">
+            <v-list-item-icon>
+              <v-icon>mdi-image-multiple</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>Imágenes</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
         </v-list-item-group>
       </v-list>
     </v-navigation-drawer>
@@ -35,8 +51,20 @@
       <v-toolbar-title>Panel de Administración</v-toolbar-title>
     </v-app-bar>
     <v-main>
-      <v-container>
-        <component :is="currentViewComponent" />
+      <v-container fluid class="py-6">
+        <v-row class="metrics-row" dense>
+          <v-col cols="12" md="8">
+            <v-card class="pa-4" elevation="2">
+              <ProductMetrics />
+            </v-card>
+          </v-col>
+          <v-col cols="12" md="4">
+            <BestCustomerCard />
+          </v-col>
+        </v-row>
+        <v-card class="mt-6 pa-4" elevation="2">
+          <component :is="currentViewComponent" />
+        </v-card>
       </v-container>
     </v-main>
   </v-app>
@@ -49,6 +77,10 @@ import { useAuthStore } from '@/store/auth';
 import ProductManagement from '@/components/ProductManagement.vue';
 import UserManagement from '@/components/UserManagement.vue';
 import RoleManagement from '@/components/RoleManagement.vue';
+import OrdersManagement from '@/components/OrdersManagement.vue';
+import ProductMetrics from '@/components/ProductMetrics.vue';
+import BestCustomerCard from '@/components/BestCustomerCard.vue';
+import ImageUrlsManagement from '@/components/ImageUrlsManagement.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -63,6 +95,10 @@ const currentViewComponent = computed(() => {
       return UserManagement;
     case 'RoleManagement':
       return RoleManagement;
+    case 'OrdersManagement':
+      return OrdersManagement;
+    case 'ImageUrlsManagement':
+      return ImageUrlsManagement;
     default:
       return ProductManagement;
   }
@@ -83,5 +119,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Tus estilos aquí */
+.metrics-row {
+  row-gap: 24px;
+}
 </style>

@@ -44,7 +44,7 @@
   
   <script setup>
   import { ref, onMounted } from 'vue';
-  import axios from 'axios';
+  import apiClient from '@/plugins/axios';
   import { useRouter } from 'vue-router';
   
   const router = useRouter();
@@ -73,7 +73,7 @@
   
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:8001/app/products/');
+      const response = await apiClient.get('/products');
       products.value = response.data.message;
     } catch (error) {
       console.error('Error al obtener los productos:', error);
@@ -107,13 +107,13 @@
   const saveProduct = async () => {
     try {
       if (isEditing.value) {
-        await axios.put(`http://localhost:8001/app/products/${editedProduct.value.id}`, editedProduct.value);
+        await apiClient.put(`/products/${editedProduct.value.id}`, editedProduct.value);
         const index = products.value.findIndex(product => product.id === editedProduct.value.id);
         if (index !== -1) {
           products.value[index] = { ...editedProduct.value };
         }
       } else {
-        const response = await axios.post('http://localhost:8001/app/products', editedProduct.value);
+        const response = await apiClient.post('/products', editedProduct.value);
         products.value.push(response.data.message);
       }
       closeDialog();
@@ -127,7 +127,7 @@
   const deleteProductHandler = async (productId) => {
     if (confirm('¿Estás seguro de eliminar este producto?')) {
       try {
-        await axios.delete(`http://localhost:8001/app/products/${productId}`);
+        await apiClient.delete(`/products/${productId}`);
         fetchProducts();
       } catch (error) {
         console.error('Error al eliminar el producto:', error);

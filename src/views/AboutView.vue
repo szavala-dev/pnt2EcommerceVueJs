@@ -6,7 +6,7 @@
           <v-card-title class="text-center title">Acerca de Nuestra Aplicación de E-Commerce</v-card-title>
           <v-card-text>
             <p class="intro-text">
-              Bienvenido a nuestra aplicación de E-Commerce, una plataforma completa y fácil de usar para todas tus necesidades de compras en línea. Nuestra aplicación está diseñada para ofrecer una experiencia de usuario excepcional, con una interfaz intuitiva y funcionalidades avanzadas.
+              Bienvenido a nuestra SPA de e-commerce construida con Vue 3 + Vite. Integra catálogo público, autenticación JWT, carrito y seguimiento de órdenes, además de un panel administrativo con métricas, gestión de imágenes, usuarios, roles y productos. Todo convive con una arquitectura documentada en el README para que nuevos colaboradores puedan integrarse rápidamente.
             </p>
 
             <v-divider class="my-4"></v-divider>
@@ -34,6 +34,16 @@
 
             <v-divider class="my-4"></v-divider>
 
+            <h3 class="section-title">Panel Administrativo y Métricas</h3>
+            <p class="mb-4">
+              El panel incluye módulos como <strong>ProductManagement</strong>, <strong>RoleManagement</strong>, <strong>UserManagement</strong>, <strong>OrdersManagement</strong> e <strong>ImageUrlsManagement</strong>. Además, tarjetas como <strong>ProductMetrics</strong> y <strong>BestCustomerCard</strong> consultan los endpoints `/products/best-selling`, `/products/least-selling` y `/users/best-customer` para ofrecer KPIs al instante.
+            </p>
+
+            <h3 class="section-title">Seguridad y Roles</h3>
+            <p>
+              Implementamos guardias en `vue-router` con `meta.requiresAuth` y `meta.requiresAdmin`, respaldados por `Pinia` y el endpoint `/users/check-admin`. Esto garantiza que el panel solo sea accesible para perfiles autorizados, mientras que el resto de la app mantiene la experiencia fluida para clientes.
+            </p>
+
             <h3 class="section-title">Tecnologías Utilizadas</h3>
             <v-container class="technologies-container">
               <v-row>
@@ -44,10 +54,18 @@
                     <li><strong>Vite:</strong> Un build tool rápido y moderno para proyectos de Vue.js.</li>
                     <li><strong>Pinia:</strong> Un store de estado para Vue.js.</li>
                     <li><strong>Axios:</strong> Una librería para hacer solicitudes HTTP.</li>
+                    <li><strong>Vue Router:</strong> Maneja navegación SPA con guardias para rutas protegidas y perfiles admin.</li>
                   </ul>
                 </v-col>
               </v-row>
             </v-container>
+
+            <v-divider class="my-4"></v-divider>
+
+            <h3 class="section-title">Documentación y Arquitectura</h3>
+            <p>
+              Toda la arquitectura, flujos y endpoints están detallados en el archivo <code>README.md</code>, incluyendo la plantilla <code>.env.example</code>, los módulos administrativos y las rutas protegidas. Cualquier colaborador puede seguir esa guía para levantar el entorno en minutos.
+            </p>
 
             <v-divider class="my-4"></v-divider>
 
@@ -88,13 +106,13 @@ export default {
   data() {
     return {
       bondades: [
-        { title: 'Interfaz Intuitiva', description: 'Nuestra aplicación está diseñada con una interfaz de usuario limpia y fácil de navegar, lo que facilita la búsqueda y compra de productos.' },
-        { title: 'Gestión de Productos', description: 'Los administradores pueden agregar, editar y eliminar productos fácilmente, manteniendo el catálogo siempre actualizado.' },
-        { title: 'Gestión de Usuarios', description: 'Los administradores pueden gestionar usuarios, asignar roles y mantener la seguridad y organización de la plataforma.' },
-        { title: 'Carrito de Compras', description: 'Los usuarios pueden agregar productos a su carrito, revisar sus selecciones y realizar pedidos de manera sencilla.' },
-        { title: 'Historial de Órdenes', description: 'Los usuarios pueden ver el historial de sus órdenes, facilitando el seguimiento de sus compras.' },
-        { title: 'Seguridad', description: 'Implementamos medidas de seguridad para proteger la información de los usuarios y garantizar transacciones seguras.' },
-        { title: 'Rendimiento', description: 'Nuestra aplicación está optimizada para ofrecer un rendimiento rápido y eficiente, incluso con grandes volúmenes de datos.' }
+        { title: 'Experiencia consistente', description: 'SPA con navegación instantánea, layouts reutilizables y soporte móvil/desktop para todo el flujo de compra.' },
+        { title: 'Panel modular', description: 'Administra productos, roles, usuarios, órdenes e imágenes desde un solo dashboard con permisos por rol.' },
+        { title: 'Métricas accionables', description: 'Tarjetas de KPIs exponen productos top/menos vendidos y el mejor cliente para tomar decisiones rápidas.' },
+        { title: 'Gestión de imágenes', description: 'Carga, marca como principal y organiza URLs por producto mediante el módulo de imágenes.' },
+        { title: 'Flujo de órdenes completo', description: 'Filtra órdenes por estado y ejecuta acciones como confirmar, preparar, enviar o cancelar sin salir del panel.' },
+        { title: 'Seguridad basada en roles', description: 'Guardias de ruta y validación de tokens impiden el acceso no autorizado al panel administrativo.' },
+        { title: 'Documentación viva', description: 'README y `.env.example` mantienen el setup claro para cualquier colaborador nuevo.' }
       ]
     };
   }

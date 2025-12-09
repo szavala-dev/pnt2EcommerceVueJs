@@ -63,7 +63,7 @@
 </template>
 
 <script>
-import axios from 'axios';
+import apiClient from '@/plugins/axios';
 
 export default {
   name: 'RegisterView',
@@ -83,7 +83,7 @@ export default {
   methods: {
     async handleRegister() {
       try {
-        const response = await axios.post('http://localhost:8001/app/users/', {
+        const response = await apiClient.post('/users', {
           name: this.name,
           lastname: this.lastname,
           mail: this.mail,

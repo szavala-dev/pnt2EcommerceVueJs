@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import axios from 'axios';
+import apiClient from '@/plugins/axios';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -11,12 +11,12 @@ export const useAuthStore = defineStore('auth', {
   actions: {
     async fetchUser() {
       try {
-        const response = await axios.get('http://localhost:8001/app/users/loginToken');
+        const response = await apiClient.get('/users/loginToken');
         const userData = response.data.user;
         this.user = { id: userData.id, name: userData.name };
         this.roleId = userData.RoleId;
         
-        const adminResponse = await axios.post('http://localhost:8001/app/users/check-admin', {
+        const adminResponse = await apiClient.post('/users/check-admin', {
           RoleId: userData.RoleId
         });
         this.isAdmin = adminResponse.data.isAdmin; 
@@ -26,7 +26,6 @@ export const useAuthStore = defineStore('auth', {
     },
     async login(token) {
       this.token = token;
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       localStorage.setItem('authToken', token);
       await this.fetchUser();
     },
@@ -35,7 +34,6 @@ export const useAuthStore = defineStore('auth', {
       this.token = null;
       this.roleId = null;
       this.isAdmin = false;
-      delete axios.defaults.headers.common['Authorization'];
       localStorage.removeItem('authToken');
     },
     setUser(updatedUser) {

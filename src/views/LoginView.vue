@@ -46,7 +46,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
-import axios from 'axios';
+import apiClient from '@/plugins/axios';
 
 const mail = ref('');
 const pass = ref('');
@@ -55,12 +55,11 @@ const authStore = useAuthStore();
 
 const submitLogin = async () => {
   try {
-    const response = await axios.post('http://localhost:8001/app/users/login', {
+    const response = await apiClient.post('/users/login', {
       mail: mail.value,
       pass: pass.value
     });
     const token = response.data.token;
-    localStorage.setItem('authToken', token);
     await authStore.login(token);
 
     if (authStore.isAdminGetter) {

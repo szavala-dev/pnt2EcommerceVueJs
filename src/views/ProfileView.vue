@@ -10,7 +10,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import ProfileCard from '@/components/ProfileCard.vue';
-import axios from 'axios';
+import apiClient from '@/plugins/axios';
 
 const authStore = useAuthStore();
 const router = useRouter();
@@ -18,7 +18,7 @@ const user = ref({});
 
 const fetchUserDetails = async (userId) => {
   try {
-    const response = await axios.get(`http://localhost:8001/app/users/${userId}`);
+    const response = await apiClient.get(`/users/${userId}`);
     const userData = response.data;
     if (userData.dateOfBirth) {
       userData.dateOfBirth = new Date(userData.dateOfBirth).toISOString().split('T')[0];

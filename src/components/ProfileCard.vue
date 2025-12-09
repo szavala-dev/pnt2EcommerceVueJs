@@ -21,7 +21,7 @@
   <script setup>
   import { ref } from 'vue';
   import { useAuthStore } from '@/store/auth';
-  import axios from 'axios';
+  import apiClient from '@/plugins/axios';
   
   const props = defineProps({
     user: {
@@ -47,7 +47,7 @@
         state: props.user.state,
         RoleId: props.user.RoleId
       };
-      const response = await axios.put(`http://localhost:8001/app/users/${props.user.id}`, payload);
+      const response = await apiClient.put(`/users/${props.user.id}`, payload);
       authStore.setUser(response.data);
       emit('update', response.data);
       alert('Perfil actualizado con éxito.');

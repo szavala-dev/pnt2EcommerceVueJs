@@ -1,10 +1,22 @@
 // src/plugins/axios.js
 import axios from 'axios';
 
-const instance = axios.create({
-  baseURL: '/api', // Usa el proxy configurado en Vite
-  timeout: 1000,
-  headers: { 'X-Custom-Header': 'foobar' }
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/app';
+
+const apiClient = axios.create({
+  baseURL: apiBaseUrl,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-export default instance;
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export default apiClient;

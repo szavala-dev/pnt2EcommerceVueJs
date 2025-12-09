@@ -19,7 +19,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import axios from 'axios';
+import apiClient from '@/plugins/axios';
 import { useAuthStore } from '@/store/auth';
 
 const route = useRoute();
@@ -32,7 +32,7 @@ let cartId = authStore.cartId;
 
 const getProductDetails = async () => {
   try {
-    const response = await axios.get(`http://localhost:8001/app/products/${route.params.id}`);
+    const response = await apiClient.get(`/products/${route.params.id}`);
     product.value = response.data.message; // Asegúrate de acceder a la propiedad correcta en la respuesta
   } catch (error) {
     console.error('Error al obtener los detalles del producto:', error);
@@ -42,7 +42,7 @@ const getProductDetails = async () => {
 
 const getCartId = async () => {
   if (!cartId) {
-    const responseCart = await axios.get(`http://localhost:8001/app/carts/${userId}`);
+    const responseCart = await apiClient.get(`/carts/${userId}`);
     cartId = responseCart.data.message.id;
   }
 };
@@ -55,7 +55,7 @@ const addToCart = async () => {
   }
   try {
     await getCartId();
-    await axios.post('http://localhost:8001/app/carts/add', {
+    await apiClient.post('/carts/add', {
       cartId: cartId,
       productId: product.value.id,
       quantity: 1,

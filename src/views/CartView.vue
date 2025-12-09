@@ -21,7 +21,7 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import axios from 'axios';
+import apiClient from '@/plugins/axios';
 import { useAuthStore } from '@/store/auth';
 import CartItem from '@/components/CartItem.vue';
 
@@ -32,7 +32,7 @@ const cartId = ref(null);
 
 const getCartItems = async () => {
   try {
-    const response = await axios.get(`http://localhost:8001/app/carts/${userId.value}`);
+    const response = await apiClient.get(`/carts/${userId.value}`);
     cartItems.value = response.data.message.CartItems;
     cartId.value = response.data.message.id;
   } catch (error) {
@@ -42,7 +42,7 @@ const getCartItems = async () => {
 
 const removeFromCart = async (productId) => {
   try {
-    await axios.post('http://localhost:8001/app/carts/remove', {
+    await apiClient.post('/carts/remove', {
       cartId: cartId.value,
       productId: productId
     });
@@ -62,7 +62,7 @@ const addToCart = async (product) => {
 
   try {
     await getCartId();
-    const responseCartItems = await axios.get(`http://localhost:8001/app/carts/${cartId.value}`);
+    const responseCartItems = await apiClient.get(`/carts/${cartId.value}`);
     const cartItems = responseCartItems.data.message.CartItems;
     const cartItem = cartItems.find(item => item.ProductId === product.id);
     const currentQuantity = cartItem ? cartItem.quantity : 0;
@@ -72,7 +72,7 @@ const addToCart = async (product) => {
       return;
     }
 
-    await axios.post('http://localhost:8001/app/carts/add', {
+    await apiClient.post('/carts/add', {
       cartId: cartId.value,
       productId: product.id,
       quantity: 1,
@@ -86,7 +86,7 @@ const addToCart = async (product) => {
 
 const generateOrder = async () => {
   try {
-    const response = await axios.post(`http://localhost:8001/app/carts/${userId.value}/generate-order`);
+    const response = await apiClient.post(`/carts/${userId.value}/generate-order`);
     alert('Orden generada con éxito');
     await getCartItems();
   } catch (error) {
