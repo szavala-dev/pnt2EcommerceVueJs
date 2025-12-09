@@ -10,6 +10,7 @@ export const useAuthStore = defineStore('auth', {
   }),
   actions: {
     async fetchUser() {
+      // Obtiene el usuario desde el token y calcula si es admin
       try {
         const response = await apiClient.get('/users/loginToken');
         const userData = response.data.user;
@@ -25,11 +26,13 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     async login(token) {
+      // Guarda el token, lo persiste y carga el usuario
       this.token = token;
       localStorage.setItem('authToken', token);
       await this.fetchUser();
     },
     logout() {
+      // Limpia sesión y token persistido
       this.user = null;
       this.token = null;
       this.roleId = null;
@@ -37,6 +40,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('authToken');
     },
     setUser(updatedUser) {
+      // Actualiza en memoria los datos básicos del usuario
       this.user = { id: updatedUser.id, name: updatedUser.name };
       this.roleId = updatedUser.RoleId;
     }

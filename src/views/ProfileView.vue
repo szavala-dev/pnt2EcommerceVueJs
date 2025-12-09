@@ -11,10 +11,12 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import ProfileCard from '@/components/ProfileCard.vue';
 import apiClient from '@/plugins/axios';
+import { useSnackbar } from '@/composables/useSnackbar';
 
 const authStore = useAuthStore();
 const router = useRouter();
 const user = ref({});
+const { showSnackbar } = useSnackbar();
 
 const fetchUserDetails = async (userId) => {
   try {
@@ -26,7 +28,7 @@ const fetchUserDetails = async (userId) => {
     user.value = userData;
   } catch (error) {
     console.error('Error al obtener los detalles del usuario:', error);
-    alert('Error al obtener los detalles del usuario.');
+    showSnackbar({ message: 'Error al obtener los detalles del usuario.', color: 'error' });
   }
 };
 
@@ -34,7 +36,7 @@ onMounted(async () => {
   try {
     await authStore.fetchUser();  
     if (!authStore.isAuthenticated) {
-      alert('No tienes permisos para acceder al panel de administración.');
+      showSnackbar({ message: 'Inicia sesión para ver tu perfil.', color: 'warning' });
       router.push('/login');
     } else {
       const userId = authStore.userId;
@@ -42,7 +44,7 @@ onMounted(async () => {
         fetchUserDetails(userId);
       } else {
         console.error('User ID is undefined');
-        alert('Error al obtener el ID del usuario.');
+        showSnackbar({ message: 'Error al obtener el ID del usuario.', color: 'error' });
     }} 
   } catch (error) {
     console.error('Error al verificar permisos de administrador:', error);

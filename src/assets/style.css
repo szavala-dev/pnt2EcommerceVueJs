@@ -3,15 +3,19 @@
 
 /* Variables de colores y estilos para Vuetify */
 :root {
-  --v-primary-base: #4a90e2; /* Azul */
-  --v-secondary-base: #50e3c2; /* Verde menta */
-  --v-accent-base: #f5a623; /* Naranja */
-  --v-error-base: #d0021b; /* Rojo */
-  --v-warning-base: #f8e71c; /* Amarillo */
-  --v-info-base: #9013fe; /* Púrpura */
-  --v-success-base: #d321bb; /* Verde */
+  --brand-black: #0a0a0a;
+  --brand-white: #ffffff;
+  --edit-green: #16a34a;
+  --delete-red: #dc2626;
+  --v-primary-base: var(--brand-black);
+  --v-secondary-base: var(--edit-green);
+  --v-accent-base: #f5a623;
+  --v-error-base: var(--delete-red);
+  --v-warning-base: #f8e71c;
+  --v-info-base: #9013fe;
+  --v-success-base: var(--edit-green);
 }
-/* Estilos globales para Vuetify */
+
 .v-application {
   font-family: 'Poppins', sans-serif;
   border-radius: 8px;
@@ -20,27 +24,54 @@
   color: #333333;
 }
 
-.v-btn {
-  background-color: var(--v-primary-base);
-  color: white; /* Asegúrate de que el color del texto sea blanco */
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
+.v-main {
+  padding-top: 96px;
 }
 
-.v-btn:hover {
-  background-color: hsl(210, 100%, 50%);
+.v-btn {
+  background-color: var(--brand-black) !important;
+  color: var(--brand-white) !important;
+  border-radius: 999px;
+  transition: background-color 0.3s ease;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.v-btn.v-btn--variant-text,
+.v-btn.v-btn--variant-plain,
+.nav-btn {
+  background-color: transparent !important;
+  color: #000 !important;
+}
+
+.edit-btn {
+  background-color: var(--edit-green) !important;
+  color: var(--brand-white) !important;
+}
+
+.delete-btn {
+  background-color: var(--delete-red) !important;
+  color: var(--brand-white) !important;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50% !important;
+  padding: 0 !important;
 }
 
 /* Estilos específicos para botones en el carrito */
 .cart-btn {
-  color: white !important; /* Fuerza el color del texto a blanco */
+  color: var(--brand-white) !important;
 }
-/* Estilos para tarjetas en Vuetify */
-.v-card {
-  background-color: white;
-  color: #333333;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+form button {
+  padding: 8px 12px;
+  border-radius: 0 20px 20px 0;
+  background-color: var(--brand-black);
+  color: var(--brand-white);
+  border: 1px solid var(--brand-black);
 }
 
 /* Estilos para campos de texto en Vuetify */
@@ -50,9 +81,15 @@
   padding: 8px;
 }
 
-.v-text-field input:focus {
-  border-color: var(--v-primary-base);
-  box-shadow: 0 0 5px rgb(255, 255, 255);
+.social-btn {
+  background-color: var(--brand-black) !important;
+  color: var(--brand-white) !important;
+  border-radius: 10px;
+  margin: 0 4px;
+}
+
+.social-btn:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 /* Estilos para banners */
@@ -76,14 +113,6 @@
   width: 500px;
   padding: 8px 12px;
   border-radius: 20px 0 0 20px;
-  border: 1px solid #ddd;
-}
-
-form button {
-  padding: 8px 12px;
-  border-radius: 0 20px 20px 0;
-  background-color: white;
-  color: #333333;
   border: 1px solid #ddd;
 }
 
@@ -114,12 +143,15 @@ form button {
 .product-card {
   font-family: 'Poppins', sans-serif;
   border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 16px;
   text-align: center;
-  max-width: 200px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin: 10px;
+  width: 320px;              /* Cards más anchas */
+  min-height: 520px;         /* Más altas y uniformes */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  margin: auto;
+  background: white;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .product-card img {
@@ -142,23 +174,23 @@ form button {
 }
 
 .product-card button {
-  background-color: #6c9fd3;
-  color: white;
+  background-color: var(--brand-black);
+  color: var(--brand-white);
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 1em;
   margin-top: 10px;
 }
 
 .product-card button:disabled {
-  background-color: #ccc;
+  background-color: #3a3a3a;
   cursor: not-allowed;
 }
 
 .product-card button:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: #1a1a1a;
 }
 
 /* Estilos para detalles del producto */
@@ -242,23 +274,23 @@ nav a:hover {
 }
 
 .pagination button {
-  background-color: #007bff;
-  color: white;
+  background-color: var(--brand-black);
+  color: var(--brand-white);
   border: none;
   padding: 10px 20px;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: pointer;
   font-size: 1em;
   margin: 0 10px;
 }
 
 .pagination button:disabled {
-  background-color: #ccc;
+  background-color: #3a3a3a;
   cursor: not-allowed;
 }
 
 .pagination button:hover:not(:disabled) {
-  background-color: #b32a00;
+  background-color: #1a1a1a;
 }
 
 .pagination span {
@@ -277,14 +309,14 @@ nav a:hover {
 }
 
 .footer-icon {
-  background-color: white; /* Fondo blanco para los íconos */
-  color: var(--v-primary-base); /* Color del ícono */
-  border-radius: 50%; /* Hace que los íconos sean redondos */
-  padding: 10px; /* Ajusta el padding para que los íconos sean más grandes */
-  margin: 5px; /* Espaciado entre los íconos */
+  background-color: var(--brand-black);
+  color: var(--brand-white);
+  border-radius: 50%;
+  padding: 10px;
+  margin: 5px;
 }
 
 .footer-icon:hover {
-  background-color: var(--v-primary-base); /* Cambia el color de fondo al pasar el cursor */
-  color: white; /* Cambia el color del ícono al pasar el cursor */
+  background-color: rgba(255, 255, 255, 0.15);
+  color: var(--brand-white);
 }

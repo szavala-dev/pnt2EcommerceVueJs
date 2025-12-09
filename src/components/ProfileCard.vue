@@ -12,16 +12,16 @@
           <v-text-field label="Dirección" v-model="user.address" required></v-text-field>
           <v-text-field label="Ciudad" v-model="user.city" required></v-text-field>
           <v-text-field label="Estado" v-model="user.state" required></v-text-field>
-          <v-btn color="primary" type="submit">Actualizar Perfil</v-btn>
+          <v-btn type="submit">Actualizar Perfil</v-btn>
         </v-form>
       </v-card-text>
     </v-card>
   </template>
   
   <script setup>
-  import { ref } from 'vue';
   import { useAuthStore } from '@/store/auth';
   import apiClient from '@/plugins/axios';
+  import { useSnackbar } from '@/composables/useSnackbar';
   
   const props = defineProps({
     user: {
@@ -32,6 +32,7 @@
   
   const emit = defineEmits(['update']);
   const authStore = useAuthStore();
+  const { showSnackbar } = useSnackbar();
   
   const updateProfile = async () => {
     try {
@@ -50,10 +51,10 @@
       const response = await apiClient.put(`/users/${props.user.id}`, payload);
       authStore.setUser(response.data);
       emit('update', response.data);
-      alert('Perfil actualizado con éxito.');
+      showSnackbar({ message: 'Perfil actualizado con éxito.', color: 'success' });
     } catch (error) {
       console.error('Error al actualizar el perfil:', error);
-      alert('Error al actualizar el perfil.');
+      showSnackbar({ message: 'Error al actualizar el perfil.', color: 'error' });
     }
   };
   </script>

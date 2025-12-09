@@ -48,7 +48,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="dialog = false">Cerrar</v-btn>
+          <v-btn @click="dialog = false">Cerrar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -60,6 +60,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import apiClient from '@/plugins/axios';
 import { useAuthStore } from '@/store/auth';
 import OrderCard from '@/components/OrderCard.vue';
+import { useSnackbar } from '@/composables/useSnackbar';
 
 const authStore = useAuthStore();
 const userId = ref(authStore.userId);
@@ -67,6 +68,7 @@ const orders = ref([]);
 const dialog = ref(false);
 const selectedOrder = ref({});
 const productNames = ref({});
+const { showSnackbar } = useSnackbar();
 
 const fetchOrders = async () => {
   try {
@@ -74,7 +76,7 @@ const fetchOrders = async () => {
     orders.value = response.data.orders;
   } catch (error) {
     console.error('Error al obtener las órdenes:', error);
-    alert('Error al obtener las órdenes.');
+    showSnackbar({ message: 'Error al obtener las órdenes.', color: 'error' });
   }
 };
 

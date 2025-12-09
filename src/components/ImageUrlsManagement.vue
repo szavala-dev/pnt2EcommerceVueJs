@@ -15,7 +15,7 @@
           variant="outlined"
           class="search-field"
         />
-        <v-btn color="primary" prepend-icon="mdi-image-plus" @click="openCreateDialog">
+        <v-btn prepend-icon="mdi-image-plus" @click="openCreateDialog">
           Nueva URL
         </v-btn>
       </div>
@@ -56,8 +56,12 @@
       </template>
 
       <template #item.actions="{ item }">
-        <v-btn icon="mdi-pencil" variant="text" @click="openEditDialog(item)" />
-        <v-btn icon="mdi-delete" color="red" variant="text" @click="deleteImage(item.id)" />
+        <v-btn class="icon-btn edit-btn" @click="openEditDialog(item)">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn class="icon-btn delete-btn" @click="deleteImage(item.id)">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
       </template>
     </v-data-table>
 
@@ -79,6 +83,25 @@
               type="url"
               required
             />
+            <div class="upload-row">
+              <v-file-input
+                v-model="fileInputValue"
+                label="Subir archivo (opcional)"
+                accept="image/*"
+                prepend-icon="mdi-cloud-upload"
+                density="comfortable"
+                :disabled="uploading"
+                :loading="uploading"
+              />
+              <v-btn
+                class="upload-button"
+                :loading="uploading"
+                :disabled="uploading"
+                @click="uploadImage"
+              >
+                Cargar imagen
+              </v-btn>
+            </div>
             <v-text-field
               v-model="form.altText"
               label="Descripción alternativa (opcional)"
@@ -93,8 +116,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn text @click="closeDialog">Cancelar</v-btn>
-          <v-btn color="primary" @click="saveImage" :loading="saving">
+          <v-btn @click="closeDialog">Cancelar</v-btn>
+          <v-btn @click="saveImage" :loading="saving">
             {{ editMode ? 'Actualizar' : 'Crear' }}
           </v-btn>
         </v-card-actions>
@@ -104,8 +127,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from 'vue';
 import apiClient from '@/plugins/axios';
+import { useSnackbar } from '@/composables/useSnackbar';
 
 const imageUrls = ref([]);
 const loading = ref(false);
@@ -121,6 +145,15 @@ const form = reactive({
   altText: '',
   isPrimary: false,
 });
+const fileInputValue = ref(null);
+const selectedFile = ref(null);
+const uploading = ref(false);
+const { showSnackbar } = useSnackbar();
+
+watch(fileInputValue, (value) => {
+  // Actualiza el archivo seleccionado al cambiar el input
+  selectedFile.value = Array.isArray(value) ? value?.[0] ?? null : value ?? null;
+});
 
 const headers = [
   { text: 'ID', value: 'id' },
@@ -132,6 +165,7 @@ const headers = [
 ];
 
 const normalizeImages = (payload) => {
+  // Normaliza la respuesta de imágenes a un formato consistente
   const list = Array.isArray(payload)
     ? payload
     : Array.isArray(payload?.images)
@@ -151,6 +185,7 @@ const normalizeImages = (payload) => {
 };
 
 const filteredImages = computed(() => {
+  // Filtra imágenes por búsqueda en producto o URL
   if (!search.value) return imageUrls.value;
   const query = search.value.toString().toLowerCase();
   return imageUrls.value.filter((item) => {
@@ -161,25 +196,28 @@ const filteredImages = computed(() => {
 });
 
 const fetchImages = async () => {
+  // Carga todas las URLs de imagen desde la API
   loading.value = true;
   try {
     const response = await apiClient.get('/image-urls');
     imageUrls.value = normalizeImages(response.data);
   } catch (error) {
     console.error('Error al obtener las imágenes:', error);
-    alert('No se pudieron cargar las URLs de imagen.');
+    showSnackbar({ message: 'No se pudieron cargar las URLs de imagen.', color: 'error' });
   } finally {
     loading.value = false;
   }
 };
 
 const openCreateDialog = () => {
+  // Abre el diálogo para crear una nueva URL
   resetForm();
   dialog.value = true;
   editMode.value = false;
 };
 
 const openEditDialog = (item) => {
+  // Abre el diálogo con los datos de la URL seleccionada
   form.id = item.id;
   form.productId = item.productId;
   form.url = item.url;
@@ -190,19 +228,25 @@ const openEditDialog = (item) => {
 };
 
 const closeDialog = () => {
+  // Cierra el diálogo y reinicia el formulario
   dialog.value = false;
   resetForm();
 };
 
 const resetForm = () => {
+  // Limpia el formulario y estados asociados a la carga
   form.id = null;
   form.productId = '';
   form.url = '';
   form.altText = '';
   form.isPrimary = false;
+  fileInputValue.value = null;
+  selectedFile.value = null;
+  uploading.value = false;
 };
 
 const buildPayload = () => {
+  // Construye el payload compatible con las variantes del backend
   const productIdNumber = form.productId ? Number(form.productId) : null;
   return {
     ProductId: productIdNumber,
@@ -215,9 +259,49 @@ const buildPayload = () => {
   };
 };
 
+const extractUploadUrl = (payload) =>
+  // Extrae la URL subida de distintas formas de respuesta
+  payload?.url ??
+  payload?.message?.url ??
+  payload?.data?.url ??
+  payload?.location ??
+  payload?.secure_url ??
+  '';
+
+const uploadImage = async () => {
+  // Sube un archivo opcional y coloca la URL resultante en el formulario
+  if (!selectedFile.value) {
+    showSnackbar({ message: 'Selecciona una imagen antes de subirla.', color: 'warning' });
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', selectedFile.value);
+
+  uploading.value = true;
+  try {
+    const response = await apiClient.post('/uploads', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    const uploadedUrl = extractUploadUrl(response.data);
+    if (!uploadedUrl) {
+      throw new Error('Respuesta sin URL');
+    }
+    form.url = uploadedUrl;
+    showSnackbar({ message: 'Imagen subida con éxito.', color: 'success' });
+  } catch (error) {
+    console.error('Error al subir la imagen:', error);
+    showSnackbar({ message: 'No se pudo subir la imagen.', color: 'error' });
+  } finally {
+    uploading.value = false;
+    fileInputValue.value = null;
+  }
+};
+
 const saveImage = async () => {
+  // Crea o actualiza una URL de imagen según el modo
   if (!form.productId || !form.url) {
-    alert('Completa el producto y la URL antes de guardar.');
+    showSnackbar({ message: 'Completa el producto y la URL antes de guardar.', color: 'warning' });
     return;
   }
 
@@ -227,32 +311,37 @@ const saveImage = async () => {
   try {
     if (editMode.value && form.id) {
       await apiClient.put(`/image-urls/${form.id}`, payload);
+      showSnackbar({ message: 'URL actualizada con éxito.', color: 'success' });
     } else {
       await apiClient.post('/image-urls', payload);
+      showSnackbar({ message: 'URL creada con éxito.', color: 'success' });
     }
     await fetchImages();
     closeDialog();
   } catch (error) {
     console.error('Error al guardar la imagen:', error);
-    alert('No se pudo guardar la URL.');
+    showSnackbar({ message: 'No se pudo guardar la URL.', color: 'error' });
   } finally {
     saving.value = false;
   }
 };
 
 const deleteImage = async (id) => {
+  // Elimina una URL tras confirmar y actualiza la lista local
   if (!id) return;
   if (!confirm('¿Eliminar esta URL de imagen?')) return;
   try {
     await apiClient.delete(`/image-urls/${id}`);
     imageUrls.value = imageUrls.value.filter((image) => image.id !== id);
+    showSnackbar({ message: 'URL eliminada.', color: 'success' });
   } catch (error) {
     console.error('Error al eliminar la imagen:', error);
-    alert('No se pudo eliminar la URL.');
+    showSnackbar({ message: 'No se pudo eliminar la URL.', color: 'error' });
   }
 };
 
 const formatDate = (value) => {
+  // Formatea fecha para mostrar o devuelve guion
   if (!value) return '-';
   return new Date(value).toLocaleString();
 };
@@ -281,5 +370,14 @@ onMounted(fetchImages);
 }
 .search-field {
   min-width: 260px;
+}
+.upload-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.upload-button {
+  min-width: 160px;
 }
 </style>

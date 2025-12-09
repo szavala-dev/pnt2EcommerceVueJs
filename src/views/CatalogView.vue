@@ -3,14 +3,14 @@
     <h2>Catálogo de Productos</h2>
     <v-row>
       <v-col
-        cols="4"
+          cols="12"
+          sm="6"
+          md="4"
+          lg="4"
         v-for="product in products"
         :key="product.id"
       >
-        <ProductCard
-          :product="product"
-          @add-to-cart="addToCart"
-        />
+        <ProductCard :product="product" />
       </v-col>
     </v-row>
   </div>
@@ -18,93 +18,25 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import ProductCard from '@/components/ProductCard.vue';
 import apiClient from '@/plugins/axios';
-import { useAuthStore } from '@/store/auth';
+import { useSnackbar } from '@/composables/useSnackbar';
 
-const authStore = useAuthStore();
-const userId = authStore.userId;
-let cartId = authStore.cartId; // Cambiado a let para permitir la reasignación
 const products = ref([]);
-const router = useRouter();
+const { showSnackbar } = useSnackbar();
 
-const getCartId = async () => {
-  if (!cartId) {
-    const responseCart = await apiClient.get(`/carts/${userId}`);
-    cartId = responseCart.data.message.id;
-  }
-};
-
-const addToCart = async (product) => {
-  if (!authStore.isAuthenticated) {
-    alert('Por favor, inicia sesión para agregar productos al carrito.');
-    router.push('/login');
-    return;
-  }
-
-  try {
-    await getCartId();
-
-    // Obtener la cantidad actual en el carrito
-    const responseCartItems = await apiClient.get(`/carts/${cartId}`);
-    const cartItems = responseCartItems.data.message.CartItems || [];
-    const cartItem = cartItems.find(item => item.ProductId === product.id);
-    const currentQuantity = cartItem ? cartItem.quantity : 0;
-
-    // Verificar si la cantidad total no excede el stock disponible
-    if (currentQuantity + 1 > product.stock) {
-      alert('No puedes agregar más productos de los que hay en stock.');
-      return;
-    }
-
-    await apiClient.post('/carts/add', {
-      cartId: cartId,
-      productId: product.id,
-      quantity: 1,
-    });
-    alert('Producto agregado al carrito con éxito');
-  } catch (error) {
-    console.error('Error al agregar el producto al carrito:', error);
-    alert('Error al agregar el producto al carrito.');
-  }
-
-  try {
-    await getCartId();
-
-    // Obtener la cantidad actual en el carrito
-    const responseCartItems = await apiClient.get(`/carts/${cartId}`);
-    const cartItems = responseCartItems.data.message.CartItems;
-    const cartItem = cartItems.find(item => item.ProductId === product.id);
-    const currentQuantity = cartItem ? cartItem.quantity : 0;
-
-    // Verificar si la cantidad total no excede el stock disponible
-    if (currentQuantity + 1 > product.stock) {
-      alert('No puedes agregar más productos de los que hay en stock.');
-      return;
-    }
-
-    await apiClient.post('/carts/add', {
-      cartId: cartId,
-      productId: product.id,
-      quantity: 1,
-    });
-    alert('Producto agregado al carrito con éxito');
-  } catch (error) {
-    console.error('Error al agregar el producto al carrito:', error);
-    alert('Error al agregar el producto al carrito.');
-  }
-};
-
-onMounted(async () => {
+const loadProducts = async () => {
+  // Obtiene el listado de productos para el catálogo
   try {
     const response = await apiClient.get('/products');
-    products.value = response.data.message; // Accede a message en lugar de data directamente
+    products.value = response.data.message;
   } catch (error) {
     console.error('Error al obtener los productos:', error);
-    alert('Error al obtener los productos.');
+    showSnackbar({ message: 'Error al obtener los productos.', color: 'error' });
   }
-});
+};
+
+onMounted(loadProducts);
 </script>
 
 <style scoped>

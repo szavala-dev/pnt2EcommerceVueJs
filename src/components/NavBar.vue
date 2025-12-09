@@ -1,71 +1,109 @@
 <template>
-  <v-app-bar app color="" light>
-    <v-toolbar-title>
+  <v-app-bar app color="" light class="navbar" height="70">
+    <v-toolbar-title class="brand">
       <img :src="logo" alt="E-Commerce Logo" class="logo" />
     </v-toolbar-title>
+
     <v-spacer></v-spacer>
 
-    <!-- Botón de Menú solo en dispositivos móviles -->
-    <v-btn v-if="isMobile" icon @click="toggleDrawer">
-      <v-icon >mdi-menu</v-icon>
-    </v-btn>
+    <div class="header-actions">
+      <div v-if="!isMobile" class="secondary-links">
+        <v-btn variant="text" to="/" class="nav-btn">Home</v-btn>
+        <v-btn variant="text" to="/catalog" class="nav-btn">Catálogo</v-btn>
+        <v-btn
+          v-if="isAuthenticated && isAdmin"
+          to="/admin"
+          class="nav-btn strong"
+          variant="text"
+        >
+          Panel de Administración
+        </v-btn>
+        <v-btn
+          v-if="isAuthenticated"
+          variant="text"
+          to="/orders"
+          class="nav-btn"
+        >
+          Órdenes
+        </v-btn>
+        <v-btn
+          v-if="isAuthenticated"
+          variant="text"
+          to="/profile"
+          class="nav-btn"
+        >
+          Hola, {{ userName }}
+        </v-btn>
+        <v-btn v-if="isAuthenticated" variant="text" class="nav-btn" @click="logout">
+          Logout
+        </v-btn>
+      </div>
 
-    <!-- Botones de navegación para pantallas grandes -->
-    <v-btn v-if="!isMobile" text :to="'/'" class="mx-3">Home</v-btn>
-    <v-btn v-if="!isMobile" text :to="'/catalog'" class="mx-3">Catálogo</v-btn>
-    <v-btn v-if="isAuthenticated && !isMobile" text :to="'/cart'" class="mx-3">Carrito</v-btn>
-    <v-btn v-if="isAuthenticated && !isMobile" text :to="'/orders'" class="mx-3">Órdenes</v-btn>
-    <v-btn v-if="!isAuthenticated && !isMobile" text :to="'/login'" class="mx-3">Ingresar</v-btn>
+      <v-btn icon class="cart-toggle" @click="openCartDrawer">
+        <v-badge
+          v-if="cartCount > 0"
+          :content="cartCount"
+          inline
+          color="black"
+          offset-x="-4"
+          offset-y="4"
+        >
+          <v-icon>mdi-cart-outline</v-icon>
+        </v-badge>
+        <v-icon v-else>mdi-cart-outline</v-icon>
+      </v-btn>
 
-    <!-- Enlace a "Sobre Nosotros" -->
-    <v-btn v-if="!isMobile" text :to="'/about'" class="mx-3">Sobre Nosotros</v-btn>
+      <v-btn
+        v-if="!isAuthenticated && !isMobile"
+        variant="text"
+        to="/login"
+        class="nav-btn login-link"
+      >
+        Ingresar
+      </v-btn>
 
-    <template v-if="isAuthenticated && !isMobile">
-      <v-btn text v-if="isAdmin" :to="'/admin'" class="mx-3">Admin</v-btn>
-      <v-btn text @click="logout" class="mx-3">Logout</v-btn>
-      <v-btn text :to="'/profile'" class="mx-3">Hola, {{ userName }}</v-btn>
-    </template>
+      <v-menu
+        v-if="isMobile"
+        v-model="mobileMenu"
+        offset-y
+        transition="scale-transition"
+      >
+        <template #activator="{ props }">
+          <v-btn icon class="menu-toggle" v-bind="props">
+            <v-icon>mdi-menu</v-icon>
+          </v-btn>
+        </template>
+        <v-list class="mobile-menu">
+          <v-list-item v-for="item in mobileLinks" :key="item.label" :to="item.to">
+            <v-list-item-title>{{ item.label }}</v-list-item-title>
+          </v-list-item>
+          <v-divider class="my-2" />
+          <template v-if="isAuthenticated">
+            <v-list-item to="/profile">
+              <v-list-item-title>Perfil</v-list-item-title>
+            </v-list-item>
+            <v-list-item @click="handleMobileLogout">
+              <v-list-item-title>Logout</v-list-item-title>
+            </v-list-item>
+          </template>
+        </v-list>
+      </v-menu>
+    </div>
   </v-app-bar>
 
-  <!-- Menú lateral (Drawer) solo en dispositivos móviles, desde la derecha -->
-  <v-navigation-drawer v-model="drawer" temporary right app>
-    <v-list>
-      <v-list-item :to="'/'">
-        <v-list-item-title>Home</v-list-item-title>
-      </v-list-item>
-      <v-list-item :to="'/catalog'">
-        <v-list-item-title>Catálogo</v-list-item-title>
-      </v-list-item>
-      <v-list-item :to="'/about'">
-        <v-list-item-title>Sobre Nosotros</v-list-item-title>
-      </v-list-item>
-      <v-list-item v-if="isAuthenticated" :to="'/cart'">
-        <v-list-item-title>Carrito</v-list-item-title>
-      </v-list-item>
-      <v-list-item v-if="isAuthenticated" :to="'/orders'">
-        <v-list-item-title>Órdenes</v-list-item-title>
-      </v-list-item>
-      <v-list-item v-if="!isAuthenticated" :to="'/login'">
-        <v-list-item-title>Ingresar</v-list-item-title>
-      </v-list-item>
-      <v-list-item v-if="isAdmin" :to="'/admin'">
-        <v-list-item-title>Admin</v-list-item-title>
-      </v-list-item>
-      <v-list-item v-if="isAuthenticated" :to="'/profile'">
-        <v-list-item-title>Hola, {{ userName }}</v-list-item-title>
-      </v-list-item>
-      <v-list-item v-if="isAuthenticated" @click="logout">
-        <v-list-item-title>Logout</v-list-item-title>
-      </v-list-item>
-    </v-list>
-  </v-navigation-drawer>
+  <CartDrawer
+    ref="cartDrawerRef"
+    v-model="cartDrawerOpen"
+    @cart-updated="updateCartCount"
+  />
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useAuthStore } from '@/store/auth';
 import { useRouter } from 'vue-router';
 import { useDisplay } from 'vuetify';
+import CartDrawer from '@/components/CartDrawer.vue';
 import logo from '@/assets/logo.png';
 
 const authStore = useAuthStore();
@@ -75,17 +113,55 @@ const userName = computed(() => authStore.userName);
 const isAdmin = computed(() => authStore.isAdminGetter);
 const display = useDisplay();
 
-const isMobile = computed(() => display.smAndDown); // Detectar si la pantalla es pequeña (móvil)
+const isMobile = computed(() => display.smAndDown.value);
 
-const drawer = ref(false); // Estado del menú lateral
+const mobileMenu = ref(false);
+const cartDrawerOpen = ref(false);
+const cartDrawerRef = ref(null);
+const cartCount = ref(0);
 
-const toggleDrawer = () => {
-  drawer.value = !drawer.value; // Alternar el estado del drawer
+const mobileLinks = computed(() => {
+  const links = [
+    { label: 'Home', to: '/' },
+    { label: 'Catálogo', to: '/catalog' },
+  ];
+
+  if (isAuthenticated.value) {
+    links.push({ label: 'Órdenes', to: '/orders' });
+    if (isAdmin.value) {
+      links.push({ label: 'Panel de Administración', to: '/admin' });
+    }
+  } else {
+    links.push({ label: 'Ingresar', to: '/login' });
+  }
+
+  return links;
+});
+
+const openCartDrawer = () => {
+  cartDrawerOpen.value = true;
+};
+
+const updateCartCount = (count) => {
+  cartCount.value = count;
+};
+
+const requestCartSync = () => {
+  if (cartDrawerRef.value?.refreshCart) {
+    cartDrawerRef.value.refreshCart();
+  }
 };
 
 onMounted(() => {
-  if (authStore.isAuthenticated) {
-    // No es necesario llamar a checkAdmin aquí porque ya se maneja en el store
+  if (typeof window !== 'undefined') {
+    window.addEventListener('cart:changed', requestCartSync);
+  }
+  requestCartSync();
+});
+
+onUnmounted(() => {
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('cart:changed', requestCartSync);
   }
 });
 
@@ -93,25 +169,102 @@ const logout = () => {
   authStore.logout();
   router.push('/');
 };
+
+const handleMobileLogout = () => {
+  mobileMenu.value = false;
+  logout();
+};
 </script>
 
 <style scoped>
-.logo {
-  height: 80px; /* Ajusta la altura del logo */
-  width: auto; /* Mantiene la proporción del logo */
-  margin-right: 10px;
-}
-.mx-3 {
-  padding: 20px;
-  margin-left: 16px;
-  margin-right: 16px;
+
+
+.navbar {
+  backdrop-filter: blur(6px);
+  padding: 16px 15px;
+  min-height: 70px;
 }
 
-/* Opcional: Ajustar el espaciado entre los botones en pantallas más grandes */
-@media (max-width: 600px) {
-  .mx-3 {
-    margin-left: 8px;
-    margin-right: 8px;
+
+.brand {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 28px;
+  flex-wrap: nowrap;
+}
+
+.logo {
+  height: 78px;
+  width: auto;
+}
+
+.secondary-links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.nav-btn {
+  color: #000 !important;
+  text-transform: none !important;
+  font-weight: 500;
+  letter-spacing: 0;
+  padding: 4px 8px !important;
+  min-height: auto !important;
+}
+
+.nav-btn.strong {
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.menu-toggle,
+.cart-toggle {
+  border-radius: 999px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.menu-toggle {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+
+.menu-toggle :deep(.v-icon) {
+  color: #fff !important;
+}
+
+.cart-toggle {
+  background-color: #fff !important;
+  color: #000 !important;
+  border: 1px solid #000 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cart-toggle :deep(.v-icon) {
+  color: #000 !important;
+}
+
+.mobile-menu {
+  min-width: 220px;
+}
+
+@media (max-width: 960px) {
+  .brand {
+    flex-wrap: wrap;
+    gap: 12px;
   }
 }
 </style>

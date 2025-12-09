@@ -32,6 +32,7 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
+  // Protege rutas requeridas, hidrata sesión desde token y valida admin
   const authStore = useAuthStore();
   const requiresAuth = Boolean(to.meta?.requiresAuth);
   const requiresAdmin = Boolean(to.meta?.requiresAdmin);

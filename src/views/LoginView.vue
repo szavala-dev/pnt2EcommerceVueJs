@@ -24,11 +24,29 @@
                 dense
                 class="mb-4"
               ></v-text-field>
-              <v-btn color="primary" type="submit" block large>Ingresar</v-btn>
+              <v-btn
+                type="submit"
+                block
+                large
+                :loading="submitting"
+                :disabled="submitting"
+              >
+                {{ submitting ? 'Ingresando...' : 'Ingresar' }}
+              </v-btn>
             </v-form>
+            <v-alert
+              v-if="errorMessage"
+              type="error"
+              class="mt-4"
+              density="comfortable"
+              border="start"
+              border-color="error"
+            >
+              {{ errorMessage }}
+            </v-alert>
             <v-divider class="my-4"></v-divider>
             <p class="register-link">
-              ¿No tienes una cuenta? <v-btn text to="/register" color="primary">Regístrate aquí</v-btn>
+              ¿No tienes una cuenta? <v-btn text to="/register">Regístrate aquí</v-btn>
             </p>
           </v-card-text>
         </v-card>
@@ -47,13 +65,20 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import apiClient from '@/plugins/axios';
+import { useSnackbar } from '@/composables/useSnackbar';
 
 const mail = ref('');
 const pass = ref('');
+const submitting = ref(false);
+const errorMessage = ref('');
 const router = useRouter();
 const authStore = useAuthStore();
+const { showSnackbar } = useSnackbar();
 
 const submitLogin = async () => {
+  // Envía las credenciales, guarda token y redirige según rol
+  errorMessage.value = '';
+  submitting.value = true;
   try {
     const response = await apiClient.post('/users/login', {
       mail: mail.value,
@@ -67,11 +92,14 @@ const submitLogin = async () => {
     } else {
       router.push('/');
     }
-
-    alert('Inicio de sesión exitoso');
+    showSnackbar({ message: 'Inicio de sesión exitoso', color: 'success' });
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
-    alert('Error al iniciar sesión. Verifique sus credenciales e intente nuevamente.');
+    const backendMessage = error?.response?.data?.message;
+    errorMessage.value = backendMessage ?? 'Credenciales inválidas. Vuelve a intentarlo.';
+    showSnackbar({ message: 'No pudimos iniciar sesión', color: 'error' });
+  } finally {
+    submitting.value = false;
   }
 };
 </script>

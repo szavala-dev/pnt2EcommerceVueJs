@@ -32,10 +32,14 @@
         ${{ Number(item.totalprice).toLocaleString('es-AR', { minimumFractionDigits: 2 }) }}
       </template>
       <template #item.actions="{ item }">
-        <v-btn icon="mdi-eye" variant="text" @click="openDetails(item)"></v-btn>
+        <v-btn class="icon-btn" @click="openDetails(item)">
+          <v-icon>mdi-eye</v-icon>
+        </v-btn>
         <v-menu transition="scale-transition">
           <template #activator="{ props }">
-            <v-btn icon="mdi-swap-horizontal" variant="text" color="primary" v-bind="props"></v-btn>
+            <v-btn class="icon-btn" v-bind="props">
+              <v-icon>mdi-swap-horizontal</v-icon>
+            </v-btn>
           </template>
           <v-list>
             <v-list-item
@@ -47,7 +51,9 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-btn icon="mdi-delete" variant="text" color="red" @click="deleteOrder(item.id)"></v-btn>
+        <v-btn class="icon-btn delete-btn" @click="deleteOrder(item.id)">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
       </template>
     </v-data-table>
 
@@ -72,7 +78,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn text @click="detailsDialog = false">Cerrar</v-btn>
+          <v-btn @click="detailsDialog = false">Cerrar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -82,12 +88,14 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
 import apiClient from '@/plugins/axios';
+import { useSnackbar } from '@/composables/useSnackbar';
 
 const orders = ref([]);
 const loading = ref(false);
 const currentFilter = ref('all');
 const detailsDialog = ref(false);
 const selectedOrder = ref(null);
+const { showSnackbar } = useSnackbar();
 
 const statusFilters = [
   { label: 'Todas', value: 'all' },
@@ -115,6 +123,7 @@ const headers = [
 ];
 
 const parsedProducts = computed(() => {
+  // Parsea el JSON de productos seleccionado para mostrarlo en detalle
   if (!selectedOrder.value?.products) return [];
   try {
     return JSON.parse(selectedOrder.value.products);
@@ -125,6 +134,7 @@ const parsedProducts = computed(() => {
 });
 
 const normalizeOrders = (payload) => {
+  // Normaliza distintas formas de respuesta en una lista de órdenes
   if (!payload) return [];
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload.orders)) return payload.orders;
@@ -133,6 +143,7 @@ const normalizeOrders = (payload) => {
 };
 
 const fetchOrders = async () => {
+  // Carga órdenes según el filtro actual y actualiza la tabla
   loading.value = true;
   try {
     const endpoint = currentFilter.value === 'all' ? '/orders' : `/orders/${currentFilter.value}`;
@@ -140,41 +151,45 @@ const fetchOrders = async () => {
     orders.value = normalizeOrders(response.data);
   } catch (error) {
     console.error('Error al obtener las órdenes:', error);
-    alert('No se pudieron cargar las órdenes.');
+    showSnackbar({ message: 'No se pudieron cargar las órdenes.', color: 'error' });
   } finally {
     loading.value = false;
   }
 };
 
 const updateStatus = async (orderId, action) => {
+  // Envía la acción de cambio de estado para una orden y refresca
   try {
     await apiClient.put(`/orders/${orderId}/${action}`);
-    alert('Estado actualizado.');
+    showSnackbar({ message: 'Estado actualizado.', color: 'success' });
     fetchOrders();
   } catch (error) {
     console.error('Error al actualizar el estado:', error);
-    alert('No se pudo actualizar el estado de la orden.');
+    showSnackbar({ message: 'No se pudo actualizar el estado de la orden.', color: 'error' });
   }
 };
 
 const deleteOrder = async (orderId) => {
+  // Elimina una orden tras confirmación y quita de la lista local
   if (!confirm('¿Eliminar esta orden?')) return;
   try {
     await apiClient.delete(`/orders/${orderId}`);
     orders.value = orders.value.filter((order) => order.id !== orderId);
-    alert('Orden eliminada.');
+    showSnackbar({ message: 'Orden eliminada.', color: 'success' });
   } catch (error) {
     console.error('Error al eliminar la orden:', error);
-    alert('No se pudo eliminar la orden.');
+    showSnackbar({ message: 'No se pudo eliminar la orden.', color: 'error' });
   }
 };
 
 const openDetails = (order) => {
+  // Abre el diálogo de detalle con la orden seleccionada
   selectedOrder.value = order;
   detailsDialog.value = true;
 };
 
 const statusColor = (status) => {
+  // Devuelve el color asociado a cada estado de orden
   const colors = {
     pending: 'orange',
     confirmed: 'green',
@@ -186,6 +201,7 @@ const statusColor = (status) => {
 };
 
 const formatDate = (value) => {
+  // Formatea fechas para mostrar o devuelve guion si falta
   if (!value) return '-';
   return new Date(value).toLocaleString();
 };

@@ -52,17 +52,7 @@
     </v-app-bar>
     <v-main>
       <v-container fluid class="py-6">
-        <v-row class="metrics-row" dense>
-          <v-col cols="12" md="8">
-            <v-card class="pa-4" elevation="2">
-              <ProductMetrics />
-            </v-card>
-          </v-col>
-          <v-col cols="12" md="4">
-            <BestCustomerCard />
-          </v-col>
-        </v-row>
-        <v-card class="mt-6 pa-4" elevation="2">
+        <v-card class="pa-4" elevation="2">
           <component :is="currentViewComponent" />
         </v-card>
       </v-container>
@@ -74,20 +64,21 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
+import { useSnackbar } from '@/composables/useSnackbar';
 import ProductManagement from '@/components/ProductManagement.vue';
 import UserManagement from '@/components/UserManagement.vue';
 import RoleManagement from '@/components/RoleManagement.vue';
 import OrdersManagement from '@/components/OrdersManagement.vue';
-import ProductMetrics from '@/components/ProductMetrics.vue';
-import BestCustomerCard from '@/components/BestCustomerCard.vue';
 import ImageUrlsManagement from '@/components/ImageUrlsManagement.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const drawer = ref(true);
 const currentView = ref('ProductManagement');
+const { showSnackbar } = useSnackbar();
 
 const currentViewComponent = computed(() => {
+  // Selecciona el componente del panel según la opción elegida
   switch (currentView.value) {
     case 'ProductManagement':
       return ProductManagement;
@@ -105,10 +96,11 @@ const currentViewComponent = computed(() => {
 });
 
 onMounted(async () => {
+  // Verifica permisos de admin al montar y redirige si no los tiene
   try {
     await authStore.fetchUser(); // Asegúrate de que esta función exista y cargue la información del usuario
     if (!authStore.isAdminGetter) {
-      alert('No tienes permisos para acceder al panel de administración.');
+      showSnackbar({ message: 'No tienes permisos para acceder al panel de administración.', color: 'error' });
       router.push('/home');
     }
   } catch (error) {
@@ -119,7 +111,4 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.metrics-row {
-  row-gap: 24px;
-}
 </style>

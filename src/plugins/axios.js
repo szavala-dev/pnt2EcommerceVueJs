@@ -1,8 +1,9 @@
 // src/plugins/axios.js
 import axios from 'axios';
 
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/app';
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? '/app';
 
+// Crea un cliente Axios configurado con baseURL y token cuando exista
 const apiClient = axios.create({
   baseURL: apiBaseUrl,
   timeout: 10000,

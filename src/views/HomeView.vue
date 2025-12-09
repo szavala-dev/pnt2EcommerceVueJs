@@ -6,14 +6,14 @@
       <h2>Nuestros Productos</h2>
       <v-row>
         <v-col
-          cols="4"
+          cols="12"
+          sm="12"
+          md="4"
+          lg="4"
           v-for="product in products"
           :key="product.id"
         >
-          <ProductCard
-            :product="product"
-            @add-to-cart="addToCart"
-          />
+          <ProductCard :product="product" />
         </v-col>
       </v-row>
       <!-- Divisor -->
@@ -43,7 +43,7 @@
                       type="email"
                       required
                     ></v-text-field>
-                    <v-btn color="primary" type="submit">Suscribirse</v-btn>
+                    <v-btn type="submit">Suscribirse</v-btn>
                   </v-form>
                 </v-col>
               </v-row>
@@ -57,105 +57,47 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
 import ProductCard from '@/components/ProductCard.vue';
 import apiClient from '@/plugins/axios';
-import { useAuthStore } from '@/store/auth';
+import { useSnackbar } from '@/composables/useSnackbar';
 
-const authStore = useAuthStore();
-const userId = authStore.userId;
-let cartId = authStore.cartId; // Cambiado a let para permitir la reasignación
 const products = ref([]);
-const router = useRouter();
+const email = ref('');
+const { showSnackbar } = useSnackbar();
 
-const getCartId = async () => {
-  if (!cartId) {
-    const responseCart = await apiClient.get(`/carts/${userId}`);
-    cartId = responseCart.data.message.id;
+const loadProducts = async () => {
+  try {
+    const response = await apiClient.get('/products');
+    products.value = response.data.message;
+  } catch (error) {
+    console.error('Error al obtener los productos:', error);
+    showSnackbar({ message: 'Error al obtener los productos.', color: 'error' });
   }
 };
 
-const addToCart = async (product) => {
-  if (!authStore.isAuthenticated) {
-    alert('Por favor, inicia sesión para agregar productos al carrito.');
-    router.push('/login');
+onMounted(loadProducts);
+
+const subscribeToNewsletter = async () => {
+  const trimmedEmail = email.value.trim();
+  if (!trimmedEmail) {
+    showSnackbar({ message: 'Ingresá un correo válido.', color: 'warning' });
     return;
   }
 
   try {
-    await getCartId();
-
-    // Obtener la cantidad actual en el carrito
-    const responseCartItems = await apiClient.get(`/carts/${cartId}`);
-    const cartItems = responseCartItems.data.message.CartItems || [];
-    const cartItem = cartItems.find(item => item.ProductId === product.id);
-    const currentQuantity = cartItem ? cartItem.quantity : 0;
-
-    // Verificar si la cantidad total no excede el stock disponible
-    if (currentQuantity + 1 > product.stock) {
-      alert('No puedes agregar más productos de los que hay en stock.');
-      return;
-    }
-
-    await apiClient.post('/carts/add', {
-      cartId: cartId,
-      productId: product.id,
-      quantity: 1,
+    await apiClient.post('/newsletter/subscribe', {
+      mail: trimmedEmail,
+      email: trimmedEmail,
     });
-    alert('Producto agregado al carrito con éxito');
-  } catch (error) {
-    console.error('Error al agregar el producto al carrito:', error);
-    alert('Error al agregar el producto al carrito.');
-  }
-
-  try {
-    await getCartId();
-
-    // Obtener la cantidad actual en el carrito
-    const responseCartItems = await apiClient.get(`/carts/${cartId}`);
-    const cartItems = responseCartItems.data.message.CartItems;
-    const cartItem = cartItems.find(item => item.ProductId === product.id);
-    const currentQuantity = cartItem ? cartItem.quantity : 0;
-
-    // Verificar si la cantidad total no excede el stock disponible
-    if (currentQuantity + 1 > product.stock) {
-      alert('No puedes agregar más productos de los que hay en stock.');
-      return;
-    }
-
-    await apiClient.post('/carts/add', {
-      cartId: cartId,
-      productId: product.id,
-      quantity: 1,
-    });
-    alert('Producto agregado al carrito con éxito');
-  } catch (error) {
-    console.error('Error al agregar el producto al carrito:', error);
-    alert('Error al agregar el producto al carrito.');
-  }
-};
-
-onMounted(async () => {
-  try {
-    const response = await apiClient.get('/products');
-    products.value = response.data.message; // Accede a message en lugar de data directamente
-  } catch (error) {
-    console.error('Error al obtener los productos:', error);
-    alert('Error al obtener los productos.');
-  }
-});
-
-
-const email = ref('');
-
-const subscribeToNewsletter = async () => {
-  try {
-    await apiClient.post('/newsletter/subscribe', { email: email.value });
-    alert('Suscripción exitosa');
+    showSnackbar({ message: 'Suscripción exitosa', color: 'success' });
     email.value = '';
   } catch (error) {
-    console.error('Error al suscribirse al newsletter:', error);
-    alert('Error al suscribirse. Por favor, intente nuevamente.');
+    console.error('Error al suscribirse al newsletter:', error?.response ?? error);
+    const backendMessage = error?.response?.data?.message;
+    showSnackbar({
+      message: backendMessage ?? 'Error al suscribirse. Por favor, intente nuevamente.',
+      color: 'error',
+    });
   }
 };
 </script>

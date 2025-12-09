@@ -3,60 +3,18 @@
     <v-card class="mx-auto" max-width="500">
       <v-card-title class="text-center">Crear Cuenta</v-card-title>
       <v-card-text>
-        <!-- Formulario de registro -->
-        <form @submit.prevent="handleRegister">
-          <v-text-field
-            label="Nombre"
-            v-model="name"
-            required
-          ></v-text-field>
-          <v-text-field
-            label="Apellido"
-            v-model="lastname"
-            required
-          ></v-text-field>
-          <v-text-field
-            label="Correo electrónico"
-            v-model="mail"
-            required
-            type="email"
-          ></v-text-field>
-          <v-text-field
-            label="DNI"
-            v-model="dni"
-            required
-          ></v-text-field>
-          <v-text-field
-            label="Contraseña"
-            v-model="pass"
-            required
-            type="password"
-          ></v-text-field>
-          <v-text-field
-            label="Fecha de Nacimiento"
-            v-model="dateOfBirth"
-            required
-            type="date"
-          ></v-text-field>
-          <v-text-field
-            label="Dirección"
-            v-model="address"
-            required
-          ></v-text-field>
-          <v-text-field
-            label="Ciudad"
-            v-model="city"
-            required
-          ></v-text-field>
-          <v-text-field
-            label="Estado"
-            v-model="state"
-            required
-          ></v-text-field>
-          <v-btn color="primary" type="submit" class="mt-3" block>
-            Crear
-          </v-btn>
-        </form>
+        <v-form @submit.prevent="handleRegister">
+          <v-text-field label="Nombre" v-model="name" required></v-text-field>
+          <v-text-field label="Apellido" v-model="lastname" required></v-text-field>
+          <v-text-field label="Correo electrónico" v-model="mail" type="email" required></v-text-field>
+          <v-text-field label="DNI" v-model="dni" required></v-text-field>
+          <v-text-field label="Contraseña" v-model="pass" type="password" required></v-text-field>
+          <v-text-field label="Fecha de Nacimiento" v-model="dateOfBirth" type="date" required></v-text-field>
+          <v-text-field label="Dirección" v-model="address" required></v-text-field>
+          <v-text-field label="Ciudad" v-model="city" required></v-text-field>
+          <v-text-field label="Estado" v-model="state" required></v-text-field>
+          <v-btn type="submit" class="mt-3" block>Crear</v-btn>
+        </v-form>
       </v-card-text>
     </v-card>
   </div>
@@ -64,6 +22,9 @@
 
 <script>
 import apiClient from '@/plugins/axios';
+import { useSnackbar } from '@/composables/useSnackbar';
+
+const { showSnackbar } = useSnackbar();
 
 export default {
   name: 'RegisterView',
@@ -95,11 +56,11 @@ export default {
           state: this.state
         });
         console.log('Registrado:', response.data);
-        alert('Registro exitoso');
+        showSnackbar({ message: 'Registro exitoso', color: 'success' });
         this.$router.push('/login'); // Redirige al login después del registro
       } catch (error) {
         console.error('Error registrando:', error);
-        alert('Error al registrar. Por favor, intente nuevamente.');
+        showSnackbar({ message: 'Error al registrar. Por favor, intente nuevamente.', color: 'error' });
       }
     }
   }

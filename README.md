@@ -12,7 +12,7 @@ SPA de e-commerce construida con Vue 3 + Vite que consume un backend REST (`http
 - Autenticación JWT administrada con Pinia; persistencia automática del token y headers Authorization en Axios.
 - Carrito y órdenes: agregar/eliminar items, validar stock, generar órdenes y consultar historial de compras.
 - Perfil de usuario editable (datos personales y dirección de envío) sincronizado con el store global.
-- Dashboard Admin modular con `ProductManagement`, `RoleManagement`, `UserManagement`, `OrdersManagement`, `ImageUrlsManagement` y tarjetas de métricas (`ProductMetrics`, `BestCustomerCard`).
+- Dashboard Admin modular con `ProductManagement`, `RoleManagement`, `UserManagement`, `OrdersManagement` e `ImageUrlsManagement`.
 - UI responsiva basada en Vuetify 3, Material Design Icons y layouts reutilizables (`NavBar`, `Footer`).
 
 ## Stack tecnológico
@@ -60,13 +60,13 @@ El servidor de desarrollo corre por defecto en `http://localhost:8000` y proxya 
 
 ## Variables de entorno
 
-Parte desde `.env.example` (`cp .env.example .env`) y ajusta los valores necesarios. El mínimo requerido es:
+Parte desde `.env.example` (`cp .env.example .env`, o crea `.env` si no existe el ejemplo) y ajusta los valores necesarios. El mínimo requerido es:
 
 ```bash
-VITE_API_URL=http://localhost:3000/app
+VITE_API_URL=/app
 ```
 
-Si la variable no está definida, el cliente Axios usará `http://localhost:3000/app` como valor por defecto.
+Con `/app` aprovechas el proxy de Vite en desarrollo y evitas problemas de CORS. Para entornos productivos, define la URL completa del backend (por ejemplo, `https://api.midominio.com/app`). Si la variable no está definida, el cliente Axios usará `/app` como valor por defecto.
 
 ## Estructura del proyecto
 
@@ -78,7 +78,6 @@ TP-Integrador/
 │   ├── assets/
 │   │   └── style.css
 │   ├── components/
-│   │   ├── BestCustomerCard.vue
 │   │   ├── CartItem.vue
 │   │   ├── Footer.vue
 │   │   ├── NavBar.vue
@@ -88,7 +87,6 @@ TP-Integrador/
 │   │   ├── ImageUrlsManagement.vue
 │   │   ├── ProductCard.vue
 │   │   ├── ProductManagement.vue
-│   │   ├── ProductMetrics.vue
 │   │   ├── ProfileCard.vue
 │   │   ├── RoleManagement.vue
 │   │   └── UserManagement.vue
@@ -119,12 +117,11 @@ TP-Integrador/
 
 ## Panel administrativo
 
-- `ProductManagement`: CRUD completo de productos (crear, editar, ocultar/publicar y eliminar) con validación de stock y precios.
+- `ProductManagement`: CRUD de productos (crear, editar, eliminar) con validación de stock/precio, carga por URL o upload; no hay estado de publicación.
 - `RoleManagement`: mantenimiento de roles y soporte para la verificación `/users/check-admin`.
-- `UserManagement`: tabla con acciones para crear, editar, eliminar y reasignar roles para cada usuario.
+- `UserManagement`: tabla con acciones para crear, editar y eliminar usuarios; el rol se asigna o cambia mediante el select de rol al crear/editar.
 - `OrdersManagement`: listado con filtros por estado, detalle expandible y acciones rápidas (`confirm`, `prepare`, `send`, `cancel`).
-- `ImageUrlsManagement`: CRUD de URLs por producto con filtros rápidos, vista previa y soporte para marcar imágenes principales.
-- `ProductMetrics` + `BestCustomerCard`: tarjetas de insights que consumen `/products/best-selling`, `/products/least-selling` y `/users/best-customer` para mostrar KPIs al ingresar al panel.
+- `ImageUrlsManagement`: CRUD de URLs por producto, filtros de búsqueda, vista previa, marca `isPrimary` y upload opcional vía `/uploads`.
 
 ## Rutas principales
 
@@ -136,7 +133,7 @@ TP-Integrador/
 | `/cart` | Carrito del usuario y generación de orden | Sí |
 | `/orders` | Historial y detalles de órdenes | Sí |
 | `/profile` | Edición de datos personales | Sí |
-| `/admin` | Panel con módulos de productos, roles, usuarios, órdenes y métricas | Sí (solo admins, validado en la vista) |
+| `/admin` | Panel con módulos de productos, roles, usuarios, órdenes e imágenes | Sí (solo admins, validado en la vista) |
 
 `router.beforeEach` asegura que las rutas marcadas con `meta.requiresAuth` sólo se visiten autenticado; `AdminDashboardView` refuerza la verificación chequeando `authStore.isAdmin` al montar.
 
@@ -151,9 +148,8 @@ Todos los endpoints viven bajo `http://localhost:3000/app` y esperan/retornan JS
 |  | `POST /users` | Registro de nuevos usuarios |
 |  | `PUT /users/:id` | Actualización de perfil |
 |  | `POST /users/check-admin` | Valida si un `RoleId` pertenece a un admin |
-|  | `GET /users/best-customer` | Obtiene el cliente con mayor gasto total para alimentar el dashboard |
 | Roles | CRUD completo (`/roles`, `/roles/:id`) | Gestión de roles desde el panel admin |
-| Productos | CRUD y métricas (`/products`, `/products/best-selling`, `/products/least-selling`) | Gestión del catálogo |
+| Productos | CRUD completo (`/products`) | Gestión del catálogo |
 | Carrito | `GET /carts/:userId`, `POST /carts/add`, `POST /carts/remove`, `POST /carts/:userId/generate-order` | Flujo de compra; `add/remove` esperan `{ userId, productId, quantity }` |
 | Órdenes | `GET /orders`, `GET /orders/user/:id`, `PUT /orders/:id/{confirm|prepare|send|cancel}` | Gestión y seguimiento de órdenes |
 |  | `GET /orders/{pending|confirmed|prepared|sent|canceled}` | Listados específicos por estado usados en `OrdersManagement` |

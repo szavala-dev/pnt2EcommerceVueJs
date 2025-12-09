@@ -6,7 +6,7 @@
           <v-card-title class="text-center title">Acerca de Nuestra Aplicación de E-Commerce</v-card-title>
           <v-card-text>
             <p class="intro-text">
-              Bienvenido a nuestra SPA de e-commerce construida con Vue 3 + Vite. Integra catálogo público, autenticación JWT, carrito y seguimiento de órdenes, además de un panel administrativo con métricas, gestión de imágenes, usuarios, roles y productos. Todo convive con una arquitectura documentada en el README para que nuevos colaboradores puedan integrarse rápidamente.
+              Bienvenido a nuestra SPA de e-commerce construida con Vue 3 + Vite. Integra catálogo público, autenticación JWT, carrito y seguimiento de órdenes, además de un panel administrativo con gestión de imágenes, usuarios, roles y productos. Todo convive con una arquitectura documentada en el README para que nuevos colaboradores puedan integrarse rápidamente.
             </p>
 
             <v-divider class="my-4"></v-divider>
@@ -34,9 +34,9 @@
 
             <v-divider class="my-4"></v-divider>
 
-            <h3 class="section-title">Panel Administrativo y Métricas</h3>
+            <h3 class="section-title">Panel Administrativo</h3>
             <p class="mb-4">
-              El panel incluye módulos como <strong>ProductManagement</strong>, <strong>RoleManagement</strong>, <strong>UserManagement</strong>, <strong>OrdersManagement</strong> e <strong>ImageUrlsManagement</strong>. Además, tarjetas como <strong>ProductMetrics</strong> y <strong>BestCustomerCard</strong> consultan los endpoints `/products/best-selling`, `/products/least-selling` y `/users/best-customer` para ofrecer KPIs al instante.
+              El panel incluye módulos como <strong>ProductManagement</strong>, <strong>RoleManagement</strong>, <strong>UserManagement</strong>, <strong>OrdersManagement</strong> e <strong>ImageUrlsManagement</strong> para centralizar todas las gestiones críticas del negocio.
             </p>
 
             <h3 class="section-title">Seguridad y Roles</h3>
@@ -108,7 +108,6 @@ export default {
       bondades: [
         { title: 'Experiencia consistente', description: 'SPA con navegación instantánea, layouts reutilizables y soporte móvil/desktop para todo el flujo de compra.' },
         { title: 'Panel modular', description: 'Administra productos, roles, usuarios, órdenes e imágenes desde un solo dashboard con permisos por rol.' },
-        { title: 'Métricas accionables', description: 'Tarjetas de KPIs exponen productos top/menos vendidos y el mejor cliente para tomar decisiones rápidas.' },
         { title: 'Gestión de imágenes', description: 'Carga, marca como principal y organiza URLs por producto mediante el módulo de imágenes.' },
         { title: 'Flujo de órdenes completo', description: 'Filtra órdenes por estado y ejecuta acciones como confirmar, preparar, enviar o cancelar sin salir del panel.' },
         { title: 'Seguridad basada en roles', description: 'Guardias de ruta y validación de tokens impiden el acceso no autorizado al panel administrativo.' },

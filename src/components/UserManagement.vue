@@ -5,7 +5,7 @@
         <h3>Gestión de Usuarios</h3>
         <p class="subtitle">Administra los clientes, sus datos y roles asignados.</p>
       </div>
-      <v-btn color="primary" @click="openAddUserDialog">Crear Usuario</v-btn>
+      <v-btn @click="openAddUserDialog">Crear Usuario</v-btn>
     </div>
 
     <v-data-table
@@ -25,9 +25,15 @@
         {{ formatDate(item.updatedAt) }}
       </template>
       <template #item.actions="{ item }">
-        <v-btn icon="mdi-eye" variant="text" @click="openViewDialog(item)"></v-btn>
-        <v-btn icon="mdi-pencil" variant="text" color="primary" @click="openEditUserDialog(item)"></v-btn>
-        <v-btn icon="mdi-delete" variant="text" color="red" @click="deleteUserHandler(item.id)"></v-btn>
+        <v-btn class="icon-btn" @click="openViewDialog(item)">
+          <v-icon>mdi-eye</v-icon>
+        </v-btn>
+        <v-btn class="icon-btn edit-btn" @click="openEditUserDialog(item)">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn class="icon-btn delete-btn" @click="deleteUserHandler(item.id)">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
       </template>
     </v-data-table>
 
@@ -66,8 +72,8 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn text @click="closeEditDialog">Cancelar</v-btn>
-          <v-btn color="primary" @click="saveUser">{{ isEditing ? 'Guardar' : 'Crear' }}</v-btn>
+          <v-btn @click="closeEditDialog">Cancelar</v-btn>
+          <v-btn @click="saveUser">{{ isEditing ? 'Guardar' : 'Crear' }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -88,7 +94,7 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn text @click="viewDialog = false">Cerrar</v-btn>
+          <v-btn @click="viewDialog = false">Cerrar</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -98,6 +104,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import apiClient from '@/plugins/axios';
+import { useSnackbar } from '@/composables/useSnackbar';
 
 const users = ref([]);
 const roles = ref([]);
@@ -107,8 +114,10 @@ const viewDialog = ref(false);
 const isEditing = ref(false);
 const selectedUser = ref(null);
 const formRef = ref(null);
+const { showSnackbar } = useSnackbar();
 
 const emptyUser = () => ({
+  // Devuelve la plantilla vacía para un usuario editable
   id: null,
   name: '',
   lastname: '',
@@ -138,6 +147,7 @@ const headers = [
 const roleOptions = ref([]);
 
 const normalizeArray = (payload) => {
+  // Normaliza distintas formas de respuesta a un arreglo estándar
   if (!payload) return [];
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload.users)) return payload.users;
@@ -146,35 +156,40 @@ const normalizeArray = (payload) => {
 };
 
 const fetchUsers = async () => {
+  // Carga usuarios desde la API y actualiza la tabla
   loading.value = true;
   try {
     const response = await apiClient.get('/users');
     users.value = normalizeArray(response.data);
   } catch (error) {
     console.error('Error al obtener los usuarios:', error);
-    alert('No se pudieron cargar los usuarios.');
+    showSnackbar({ message: 'No se pudieron cargar los usuarios.', color: 'error' });
   } finally {
     loading.value = false;
   }
 };
 
 const fetchRoles = async () => {
+  // Carga roles para popular select y resolver nombres
   try {
     const response = await apiClient.get('/roles');
     roles.value = normalizeArray(response.data);
     roleOptions.value = roles.value;
   } catch (error) {
     console.error('Error al obtener los roles:', error);
+    showSnackbar({ message: 'No se pudieron cargar los roles.', color: 'error' });
   }
 };
 
 const openAddUserDialog = () => {
+  // Abre diálogo para crear usuario nuevo
   isEditing.value = false;
   editableUser.value = emptyUser();
   editDialog.value = true;
 };
 
 const openEditUserDialog = (user) => {
+  // Abre diálogo con datos precargados para editar usuario
   isEditing.value = true;
   editableUser.value = {
     ...user,
@@ -184,61 +199,68 @@ const openEditUserDialog = (user) => {
 };
 
 const openViewDialog = (user) => {
+  // Muestra el diálogo de detalle de usuario
   selectedUser.value = user;
   viewDialog.value = true;
 };
 
 const closeEditDialog = () => {
+  // Cierra el diálogo de edición y limpia el formulario
   editDialog.value = false;
   editableUser.value = emptyUser();
 };
 
 const saveUser = async () => {
+  // Crea o actualiza un usuario según el modo actual
   try {
     const payload = { ...editableUser.value };
     if (isEditing.value) {
       delete payload.pass;
       await apiClient.put(`/users/${payload.id}`, payload);
-      alert('Usuario actualizado con éxito.');
+      showSnackbar({ message: 'Usuario actualizado con éxito.', color: 'success' });
     } else {
       if (!payload.pass) {
-        alert('Define una contraseña temporal.');
+        showSnackbar({ message: 'Define una contraseña temporal.', color: 'warning' });
         return;
       }
       await apiClient.post('/users', payload);
-      alert('Usuario creado con éxito.');
+      showSnackbar({ message: 'Usuario creado con éxito.', color: 'success' });
     }
     closeEditDialog();
     await fetchUsers();
   } catch (error) {
     console.error('Error al guardar el usuario:', error);
-    alert('No se pudo guardar el usuario.');
+    showSnackbar({ message: 'No se pudo guardar el usuario.', color: 'error' });
   }
 };
 
 const deleteUserHandler = async (userId) => {
+  // Elimina un usuario tras confirmación y actualiza la lista
   if (!confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.')) return;
   try {
     await apiClient.delete(`/users/${userId}`);
     users.value = users.value.filter((user) => user.id !== userId);
-    alert('Usuario eliminado.');
+    showSnackbar({ message: 'Usuario eliminado.', color: 'success' });
   } catch (error) {
     console.error('Error al eliminar el usuario:', error);
-    alert('No se pudo eliminar el usuario.');
+    showSnackbar({ message: 'No se pudo eliminar el usuario.', color: 'error' });
   }
 };
 
 const formatDate = (value) => {
+  // Formatea fechas para mostrarlas o devuelve guion
   if (!value) return '-';
   return new Date(value).toLocaleString();
 };
 
 const resolveRoleName = (roleId) => {
+  // Devuelve el nombre del rol según el id
   const role = roles.value.find((roleItem) => roleItem.id === roleId);
   return role ? role.name : 'Sin rol';
 };
 
 onMounted(async () => {
+  // Carga inicial de usuarios y roles en paralelo
   await Promise.all([fetchUsers(), fetchRoles()]);
 });
 </script>
