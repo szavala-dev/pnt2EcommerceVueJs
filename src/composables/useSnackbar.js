@@ -8,7 +8,7 @@ const state = reactive({
   location: 'bottom',
 });
 
-const showSnackbar = ({ message, color = 'success', timeout = 2500 } = {}) => {
+const showSnackbar = ({ message, color = 'success', timeout = 2000 } = {}) => {
   // Muestra el snackbar con mensaje, color y duración elegidos
   state.message = message ?? '';
   state.color = color;

@@ -124,6 +124,6 @@ const decrement = () => {
 
 .remove-btn {
   border-color: #000 !important;
-  color: #000 !important;
+  color: #fcfcfc !important;
 }
 </style>
